@@ -65,7 +65,14 @@
        ========================================================================= -->
   <header class="site-header">
     <div class="header-main">
-      <!-- Brand Logo -->
+      <!-- Mobile Quick WhatsApp Action (Left side on mobile) -->
+      <button class="header-mobile-wa-btn" onclick="sendWhatsAppInquiry('general')" title="Chat on WhatsApp" aria-label="WhatsApp Us">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0 0 12.04 2z"/>
+        </svg>
+      </button>
+
+      <!-- Brand Logo (Centered on mobile browser) -->
       <a href="index.html" class="brand-logo" title="SUVINA JEWELS Home">
         <img src="image/logo-black.png" alt="SUVINA JEWELS" class="brand-logo-img" />
       </a>
@@ -75,7 +82,7 @@
         <input type="text" 
                id="headerSearchInput" 
                class="search-input-box" 
-               placeholder="Search by necklace name, kemp ruby, emerald, code..." 
+               placeholder="Search by product code (e.g. SVJ101), emerald, ruby..." 
                aria-label="Search jewelry catalog" />
         <button class="search-submit-btn" aria-label="Search button">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
@@ -122,7 +129,7 @@
         <input type="text" 
                id="mobileSearchInput" 
                class="mobile-search-input" 
-               placeholder="Search by necklace, kemp ruby, emerald, code..." 
+               placeholder="Search by product code (e.g. SVJ101), emerald, ruby..." 
                aria-label="Search jewelry catalog" />
       </div>
     </div>
@@ -200,7 +207,7 @@
         <!-- Action Buttons -->
         <div class="hero-actions">
           <a href="#catalogSection" class="btn-gold" onclick="selectCategory('all')">
-            <span>Explore All 19 Sets</span>
+            <span id="heroExploreBtnText">Explore All Designs</span>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
               <path d="M5 12h14M12 5l7 7-7 7"/>
             </svg>
@@ -215,28 +222,27 @@
         </div>
       </div>
 
-      <!-- Right Column: Editorial Showcase Piece (Using real image from with ai 02) -->
+      <!-- Right Column: Editorial Showcase Piece (Dynamic) -->
       <div class="hero-showcase-col">
         <div class="hero-card-showcase">
           <div class="hero-card-media">
-            <span class="hero-card-badge">LIMITED EDITION</span>
-            <span class="hero-card-tag">👑 Maharani Velvet Series</span>
-            <img src="image/with ai 02/Editorial_01_Floral_Rosette_01_Full_Set.jpg" 
-                 alt="Maharani Emerald Velvet Showcase Rosette Set" />
+            <span class="hero-card-badge">LIMITED SHOWCASE</span>
+            <span class="hero-card-tag">👑 Featured Design</span>
+            <img id="heroShowcaseImg" src="image/with ai 02/Editorial_01_Floral_Rosette_01_Full_Set.jpg" 
+                 alt="Featured Design" />
           </div>
           <div class="hero-card-body">
-            <h3>Maharani Velvet Edition Floral Rosette Set</h3>
+            <h3 id="heroShowcaseTitle" class="hero-showcase-code">SVJ101</h3>
             <div class="hero-card-meta">
               <div class="hero-card-price">
-                <span class="current-price">₹3,499</span>
-                <span class="original-price">₹5,999</span>
-                <span style="font-size: 0.8rem; font-weight: 700; color: var(--color-ruby);">(42% OFF)</span>
+                <span class="current-price" id="heroShowcasePrice">₹499</span>
+                <span class="original-price" id="heroShowcaseOriginalPrice">₹899</span>
+                <span id="heroShowcaseDiscount" style="font-size: 0.8rem; font-weight: 700; color: var(--color-ruby);">(45% OFF)</span>
               </div>
-              <div style="font-size: 0.82rem; color: #e6a100; font-weight: 700;">★★★★★ (320)</div>
             </div>
             <div class="hero-card-cta">
-              <button class="btn-view" onclick="openProductModal('sj-ed01')">Quick View</button>
-              <button class="btn-wa" onclick="orderProductViaWhatsApp('sj-ed01')">
+              <button class="btn-view" id="heroShowcaseViewBtn" onclick="openProductModal('svj-101')">Quick View</button>
+              <button class="btn-wa" id="heroShowcaseWaBtn" onclick="orderProductViaWhatsApp('svj-101')">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0 0 12.04 2z"/>
                 </svg>
@@ -332,17 +338,16 @@
         <div class="catalog-controls">
           <label for="catalogSortSelect" class="results-count-text">Sort by:</label>
           <select id="catalogSortSelect" class="sort-select">
-            <option value="featured">Featured Picks</option>
+            <option value="code-asc" selected>Product Code (SVJ101 - SVJ121)</option>
             <option value="price-asc">Price: Low to High</option>
             <option value="price-desc">Price: High to Low</option>
             <option value="discount">Highest Discount</option>
-            <option value="rating">Top Rated (5 Stars)</option>
           </select>
         </div>
       </div>
 
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-        <span id="resultsCountLabel" class="results-count-text">Showing 19 exquisite jewelry designs</span>
+        <span id="resultsCountLabel" class="results-count-text">Showing all exquisite jewelry designs</span>
         <button onclick="resetFilters()" style="font-size: 0.82rem; color: var(--color-gold); font-weight: 600; text-decoration: underline;">
           Reset Filters
         </button>

@@ -9,12 +9,12 @@ const AppState = {
   wishlist: [],
   activeCategory: "all",
   searchQuery: "",
-  sortBy: "featured",
+  sortBy: "code-asc",
   appliedCoupon: null,
   activeProductModal: null,
   activeModalAngle: "full",
   modalQuantity: 1,
-  // Default WhatsApp Business Number (e.g., +91 98765 43210)
+  // Default WhatsApp Business Number
   whatsappNumber: localStorage.getItem("suvina_whatsapp_number") || "918072322276"
 };
 
@@ -25,9 +25,84 @@ const VALID_COUPONS = {
   "GOLD10": { type: "percent", value: 10, label: "10% OFF Gold Jewels", minOrder: 1499 }
 };
 
+// Circular Category Navigation Data (All images verified with ai 02)
+const CATEGORY_ITEMS = [
+  { id: "all", name: "All Jewels", image: "image/with ai 02/01_Floral_Rosette_01_Full_Set.jpg" },
+  { id: "necklace-sets", name: "Chokers & Sets", image: "image/with ai 02/05_Rectangle_Stone_Link_01_Full_Set.jpg" },
+  { id: "emerald-collection", name: "Emerald Luxe", image: "image/with ai 02/08_Emerald_Floral_Drop_01_Full_Set.jpg" },
+  { id: "ruby-kemp", name: "Ruby & Kemp", image: "image/with ai 02/07_Ruby_Floral_Drop_01_Full_Set.jpg" },
+  { id: "ad-stones", name: "AD & CZ Stones", image: "image/with ai 02/10_Double_Row_Round_Stones_01_Full_Set.jpg" },
+  { id: "daily-wear", name: "Daily Wear", image: "image/with ai 02/16_Open_Teardrop_Pendant_01_Full_Set.jpg" },
+  { id: "bridal-combos", name: "Bridal Combos", image: "image/with ai 02/04_Emerald_Loop_Fan_01_Full_Set.jpg" },
+  { id: "temple-jewels", name: "Temple Jewels", image: "image/with ai 02/06_Paisley_Leaf_Pendant_01_Necklace_Overview.jpg" }
+];
+
+// Verified Customer Reviews
+const CUSTOMER_REVIEWS = [
+  {
+    name: "Pooja Sundaram",
+    location: "Chennai, Tamil Nadu",
+    product: "SVJ102",
+    rating: 5,
+    date: "2 days ago",
+    verified: true,
+    comment: "The antique gold finish and ruby stones look remarkably royal! Received in 2 days in secure luxury packing."
+  },
+  {
+    name: "Ananya Iyer",
+    location: "Bangalore, Karnataka",
+    product: "SVJ112",
+    rating: 5,
+    date: "1 week ago",
+    verified: true,
+    comment: "Stunning double-row CZ stones and perfect shine under lighting. Best jewelry purchase on WhatsApp!"
+  },
+  {
+    name: "Deepika Rao",
+    location: "Hyderabad, Telangana",
+    product: "SVJ105",
+    rating: 5,
+    date: "2 weeks ago",
+    verified: true,
+    comment: "Necklace and matching earrings are lightweight yet feel very premium. Highly recommend Suvina Jewels!"
+  },
+  {
+    name: "Kavitha Ramanathan",
+    location: "Coimbatore, Tamil Nadu",
+    product: "SVJ110",
+    rating: 5,
+    date: "3 days ago",
+    verified: true,
+    comment: "The floral rosette medallion and matte micro-gold finish look just like real 22K gold! Safe packaging and fast delivery."
+  }
+];
+
+// --- HELPER: DYNAMIC PRODUCT DISPLAY NAME ---
+// When product.name is empty (as currently requested), displays the product code (e.g. "SVJ101").
+// When jewels names are provided later, it will automatically display the jewel name!
+function getProductDisplayName(product) {
+  if (!product) return "";
+  if (product.name && product.name.trim() !== "" && product.name.trim() !== product.code.trim()) {
+    return product.name.trim();
+  }
+  return product.code;
+}
+
+// Dynamic Category Counts
+function getCategoryCount(catId) {
+  if (catId === "all") {
+    return `${JEWELRY_PRODUCTS.length} designs`;
+  }
+  const count = JEWELRY_PRODUCTS.filter(p => 
+    (p.categories && p.categories.includes(catId)) || p.category === catId
+  ).length;
+  return `${count} designs`;
+}
+
 // --- INITIALIZATION ---
 document.addEventListener("DOMContentLoaded", () => {
   loadStoredData();
+  initHeroShowcase();
   renderCategoryCircles();
   renderCatalogTabs();
   renderProducts();
@@ -63,7 +138,42 @@ function saveWishlist() {
   localStorage.setItem("suvina_jewelry_wishlist", JSON.stringify(AppState.wishlist));
 }
 
-// --- RENDER CATEGORY CIRCLES (Jasvik Style Image 3) ---
+// --- HERO SHOWCASE DYNAMIC BINDING ---
+function initHeroShowcase() {
+  // Select featured showcase product (e.g., SVJ101 or first featured)
+  const featured = JEWELRY_PRODUCTS.find(p => p.id === "svj101" || p.id === "svj-101") || JEWELRY_PRODUCTS[0];
+  if (!featured) return;
+
+  const displayName = getProductDisplayName(featured);
+  const titleEl = document.getElementById("heroShowcaseTitle");
+  const priceEl = document.getElementById("heroShowcasePrice");
+  const origPriceEl = document.getElementById("heroShowcaseOriginalPrice");
+  const discountEl = document.getElementById("heroShowcaseDiscount");
+  const imgEl = document.getElementById("heroShowcaseImg");
+  const viewBtn = document.getElementById("heroShowcaseViewBtn");
+  const waBtn = document.getElementById("heroShowcaseWaBtn");
+  const exploreBtnText = document.getElementById("heroExploreBtnText");
+
+  if (titleEl) titleEl.textContent = displayName;
+  if (priceEl) priceEl.textContent = `₹${featured.price.toLocaleString("en-IN")}`;
+  if (origPriceEl) origPriceEl.textContent = `₹${featured.originalPrice.toLocaleString("en-IN")}`;
+  if (discountEl) discountEl.textContent = `(${featured.discountPercent}% OFF)`;
+  if (imgEl) {
+    imgEl.src = featured.images.full;
+    imgEl.alt = displayName;
+  }
+  if (viewBtn) {
+    viewBtn.setAttribute("onclick", `openProductModal('${featured.id}')`);
+  }
+  if (waBtn) {
+    waBtn.setAttribute("onclick", `orderProductViaWhatsApp('${featured.id}')`);
+  }
+  if (exploreBtnText) {
+    exploreBtnText.textContent = `Explore All ${JEWELRY_PRODUCTS.length} Designs`;
+  }
+}
+
+// --- RENDER CATEGORY CIRCLES ---
 function renderCategoryCircles() {
   const container = document.getElementById("categoryCirclesContainer");
   if (!container) return;
@@ -80,7 +190,7 @@ function renderCategoryCircles() {
         </div>
       </div>
       <span class="category-circle-name">${cat.name}</span>
-      <span class="category-circle-count">${cat.count}</span>
+      <span class="category-circle-count">${getCategoryCount(cat.id)}</span>
     </div>
   `).join("");
 }
@@ -92,12 +202,12 @@ function renderCatalogTabs() {
 
   const tabs = [
     { id: "all", name: "All Jewels" },
-    { id: "bridal-combos", name: "Bridal Combos" },
     { id: "necklace-sets", name: "Chokers & Sets" },
-    { id: "temple-jewels", name: "Temple Jewels" },
-    { id: "ruby-kemp", name: "Ruby & Kemp" },
     { id: "emerald-collection", name: "Emerald Luxe" },
+    { id: "ruby-kemp", name: "Ruby & Kemp" },
     { id: "ad-stones", name: "AD & CZ Stones" },
+    { id: "bridal-combos", name: "Bridal Combos" },
+    { id: "temple-jewels", name: "Temple Jewels" },
     { id: "daily-wear", name: "Daily Wear" }
   ];
 
@@ -129,20 +239,20 @@ function getFilteredProducts() {
 
   // Category filter
   if (AppState.activeCategory && AppState.activeCategory !== "all") {
-    list = list.filter(p => p.categories.includes(AppState.activeCategory) || p.category === AppState.activeCategory);
+    list = list.filter(p => (p.categories && p.categories.includes(AppState.activeCategory)) || p.category === AppState.activeCategory);
   }
 
-  // Search filter
+  // Search filter (by product code, description, or future jewel name)
   if (AppState.searchQuery.trim()) {
     const q = AppState.searchQuery.toLowerCase().trim();
     list = list.filter(p => 
-      p.name.toLowerCase().includes(q) ||
-      p.code.toLowerCase().includes(q) ||
-      p.description.toLowerCase().includes(q)
+      (p.code && p.code.toLowerCase().includes(q)) ||
+      (p.name && p.name.toLowerCase().includes(q)) ||
+      (p.description && p.description.toLowerCase().includes(q))
     );
   }
 
-  // Sorting
+  // Sorting (Default to strict numerical code sequence: SVJ101 -> SVJ121)
   switch (AppState.sortBy) {
     case "price-asc":
       list.sort((a, b) => a.price - b.price);
@@ -153,12 +263,14 @@ function getFilteredProducts() {
     case "discount":
       list.sort((a, b) => b.discountPercent - a.discountPercent);
       break;
-    case "rating":
-      list.sort((a, b) => b.rating - a.rating);
-      break;
+    case "code-asc":
     case "featured":
     default:
-      list.sort((a, b) => (b.isFeatured ? 1 : 0) - (a.isFeatured ? 1 : 0));
+      list.sort((a, b) => {
+        const numA = parseInt(a.code.replace(/\D/g, ""), 10) || 0;
+        const numB = parseInt(b.code.replace(/\D/g, ""), 10) || 0;
+        return numA - numB;
+      });
       break;
   }
 
@@ -174,7 +286,7 @@ function renderProducts() {
   const products = getFilteredProducts();
 
   if (countLabel) {
-    countLabel.textContent = `Showing ${products.length} of ${JEWELRY_PRODUCTS.length} exquisite jewelry designs`;
+    countLabel.textContent = `Showing ${products.length} of ${JEWELRY_PRODUCTS.length} designs`;
   }
 
   if (products.length === 0) {
@@ -185,7 +297,7 @@ function renderProducts() {
           No Jewelry Found
         </h3>
         <p style="color: var(--text-muted); margin-bottom: 18px;">
-          We couldn't find any designs matching "${AppState.searchQuery}". Try a different category or search term.
+          We couldn't find any designs matching "${AppState.searchQuery}". Try a different category or search by code (e.g. SVJ101).
         </p>
         <button class="btn-gold" onclick="resetFilters()">View All Collections</button>
       </div>
@@ -195,6 +307,7 @@ function renderProducts() {
 
   grid.innerHTML = products.map(p => {
     const isWishlisted = AppState.wishlist.includes(p.id);
+
     return `
       <article class="product-card" data-product-id="${p.id}">
         <div class="product-card-media" onclick="openProductModal('${p.id}')">
@@ -209,7 +322,7 @@ function renderProducts() {
             </svg>
           </button>
 
-          <img src="${p.images.full}" alt="${p.name}" loading="lazy" />
+          <img src="${p.images.full}" alt="${p.code}" loading="lazy" />
 
           <button class="quick-view-overlay-btn" onclick="event.stopPropagation(); openProductModal('${p.id}')">
             🔍 Quick View
@@ -217,15 +330,9 @@ function renderProducts() {
         </div>
 
         <div class="product-card-content">
-          <span class="product-card-code">${p.code}</span>
-          <h3 class="product-card-title" title="${p.name}" onclick="openProductModal('${p.id}')" style="cursor: pointer;">
-            ${p.name}
+          <h3 class="product-card-title product-code-title" onclick="openProductModal('${p.id}')" style="cursor: pointer;" title="View ${p.code}">
+            ${p.code}
           </h3>
-
-          <div class="product-card-rating">
-            <span class="stars-gold">★★★★★</span>
-            <span class="rating-count">(${p.reviewCount})</span>
-          </div>
 
           <div class="product-card-price-row">
             <span class="card-current-price">₹${p.price.toLocaleString("en-IN")}</span>
@@ -255,7 +362,7 @@ function renderProducts() {
 function resetFilters() {
   AppState.activeCategory = "all";
   AppState.searchQuery = "";
-  AppState.sortBy = "featured";
+  AppState.sortBy = "code-asc";
   const searchInput = document.getElementById("headerSearchInput");
   const mobileSearchInput = document.getElementById("mobileSearchInput");
   if (searchInput) searchInput.value = "";
@@ -309,6 +416,7 @@ function renderProductModalContent() {
   const modalContent = document.getElementById("productModalContent");
   if (!p || !modalContent) return;
 
+  const displayName = getProductDisplayName(p);
   const currentImg = p.images[AppState.activeModalAngle] || p.images.full;
 
   modalContent.innerHTML = `
@@ -318,7 +426,7 @@ function renderProductModalContent() {
       <!-- Left: Multi-Angle Gallery -->
       <div class="modal-gallery">
         <div class="modal-main-img-box">
-          <img src="${currentImg}" id="modalMainImg" alt="${p.name}" />
+          <img src="${currentImg}" id="modalMainImg" alt="${displayName}" />
         </div>
 
         <div class="modal-thumbnails-row">
@@ -330,13 +438,13 @@ function renderProductModalContent() {
 
           <button class="modal-thumb-btn ${AppState.activeModalAngle === 'necklace' ? 'is-active' : ''}" 
                   onclick="switchModalImageAngle('necklace')">
-            <img src="${p.images.necklace}" alt="Necklace Detail" />
+            <img src="${p.images.necklace || p.images.full}" alt="Necklace Detail" />
             <span class="modal-thumb-label">Necklace</span>
           </button>
 
           <button class="modal-thumb-btn ${AppState.activeModalAngle === 'earrings' ? 'is-active' : ''}" 
                   onclick="switchModalImageAngle('earrings')">
-            <img src="${p.images.earrings}" alt="Earring Detail" />
+            <img src="${p.images.earrings || p.images.full}" alt="Earrings Detail" />
             <span class="modal-thumb-label">Earrings</span>
           </button>
         </div>
@@ -345,12 +453,10 @@ function renderProductModalContent() {
       <!-- Right: Product Details & Purchase Actions -->
       <div class="modal-details">
         <span class="modal-code-tag">${p.code} · ${p.badge || 'AUTHENTIC CREATION'}</span>
-        <h2 class="modal-product-title">${p.name}</h2>
+        <h2 class="modal-product-title">${p.code}</h2>
 
-        <div class="modal-rating-row">
-          <span class="stars-gold">★★★★★</span>
-          <span>${p.rating} / 5.0 (${p.reviewCount} verified reviews)</span>
-          <span class="in-stock-tag" style="margin-left: auto;">In Stock (Dispatched in ${p.dispatchHours}h)</span>
+        <div style="margin-bottom: 12px;">
+          <span class="in-stock-tag">✓ In Stock (Dispatched within ${p.dispatchHours}h)</span>
         </div>
 
         <div class="modal-price-box">
@@ -364,6 +470,10 @@ function renderProductModalContent() {
         <!-- Specifications Table -->
         <table class="modal-specs-table">
           <tbody>
+            <tr>
+              <td>Product Code</td>
+              <td><strong>${p.code}</strong></td>
+            </tr>
             <tr>
               <td>Base Metal</td>
               <td>${p.details.baseMetal}</td>
@@ -492,6 +602,7 @@ function addToCart(productId, quantity = 1) {
   const product = JEWELRY_PRODUCTS.find(p => p.id === productId);
   if (!product) return;
 
+  const displayName = getProductDisplayName(product);
   const existing = AppState.cart.find(item => item.id === productId);
   if (existing) {
     existing.quantity += quantity;
@@ -499,7 +610,7 @@ function addToCart(productId, quantity = 1) {
     AppState.cart.push({
       id: product.id,
       code: product.code,
-      name: product.name,
+      name: displayName,
       price: product.price,
       originalPrice: product.originalPrice,
       image: product.images.full,
@@ -509,7 +620,7 @@ function addToCart(productId, quantity = 1) {
 
   saveCart();
   updateCartUI();
-  showToast(`✨ Added "${product.name}" to cart!`);
+  showToast(`✨ Added "${displayName}" to cart!`);
 }
 
 function updateCartItemQty(productId, delta) {
@@ -605,11 +716,11 @@ function updateCartUI() {
     itemsContainer.innerHTML = AppState.cart.map(item => `
       <div class="cart-item-row">
         <div class="cart-item-thumb">
-          <img src="${item.image}" alt="${item.name}" />
+          <img src="${item.image}" alt="${item.name || item.code}" />
         </div>
         <div class="cart-item-details">
           <div class="cart-item-code">${item.code}</div>
-          <h4 class="cart-item-name">${item.name}</h4>
+          ${item.name && item.name !== item.code ? `<h4 class="cart-item-name">${item.name}</h4>` : ''}
           <div class="cart-item-price">₹${item.price.toLocaleString("en-IN")}</div>
           <div class="cart-item-actions-row">
             <div class="cart-qty-ctrls">
@@ -771,31 +882,34 @@ function updateWishlistUI() {
   }
 
   if (emptyState) emptyState.style.display = "none";
-  container.innerHTML = wishlistedProducts.map(p => `
-    <div class="cart-item-row">
-      <div class="cart-item-thumb" onclick="openProductModal('${p.id}'); closeWishlistDrawer();" style="cursor: pointer;">
-        <img src="${p.images.full}" alt="${p.name}" />
-      </div>
-      <div class="cart-item-details">
-        <div class="cart-item-code">${p.code}</div>
-        <h4 class="cart-item-name" onclick="openProductModal('${p.id}'); closeWishlistDrawer();" style="cursor: pointer;">
-          ${p.name}
-        </h4>
-        <div class="cart-item-price">₹${p.price.toLocaleString("en-IN")}</div>
-        <div style="display: flex; gap: 8px; margin-top: 8px;">
-          <button class="btn-card-cart" onclick="addToCart('${p.id}', 1); toggleWishlist('${p.id}');" style="padding: 4px 8px; font-size: 0.72rem;">
-            Move to Cart
-          </button>
-          <button class="btn-card-wa" onclick="orderProductViaWhatsApp('${p.id}')" style="padding: 4px 8px; font-size: 0.72rem;">
-            Order WA
-          </button>
+  container.innerHTML = wishlistedProducts.map(p => {
+    const displayName = getProductDisplayName(p);
+    return `
+      <div class="cart-item-row">
+        <div class="cart-item-thumb" onclick="openProductModal('${p.id}'); closeWishlistDrawer();" style="cursor: pointer;">
+          <img src="${p.images.full}" alt="${displayName}" />
         </div>
+        <div class="cart-item-details">
+          <div class="cart-item-code">${p.code}</div>
+          <h4 class="cart-item-name" onclick="openProductModal('${p.id}'); closeWishlistDrawer();" style="cursor: pointer;">
+            ${displayName}
+          </h4>
+          <div class="cart-item-price">₹${p.price.toLocaleString("en-IN")}</div>
+          <div style="display: flex; gap: 8px; margin-top: 8px;">
+            <button class="btn-card-cart" onclick="addToCart('${p.id}', 1); toggleWishlist('${p.id}');" style="padding: 4px 8px; font-size: 0.72rem;">
+              Move to Cart
+            </button>
+            <button class="btn-card-wa" onclick="orderProductViaWhatsApp('${p.id}')" style="padding: 4px 8px; font-size: 0.72rem;">
+              Order WA
+            </button>
+          </div>
+        </div>
+        <button class="cart-item-remove-btn" onclick="toggleWishlist('${p.id}')" title="Remove from wishlist">
+          ✕
+        </button>
       </div>
-      <button class="cart-item-remove-btn" onclick="toggleWishlist('${p.id}')" title="Remove from wishlist">
-        ✕
-      </button>
-    </div>
-  `).join("");
+    `;
+  }).join("");
 }
 
 function toggleWishlistDrawer(forceOpen = null) {
@@ -821,7 +935,7 @@ function closeWishlistDrawer() {
   toggleWishlistDrawer(false);
 }
 
-// --- WHATSAPP INTEGRATION ENGINE (Crucial Requirement) ---
+// --- WHATSAPP INTEGRATION ENGINE ---
 
 /**
  * 1. Single Product Order via WhatsApp
@@ -832,14 +946,16 @@ function orderProductViaWhatsApp(productId, quantity = 1) {
 
   const currentUrl = window.location.href.split("#")[0];
   const totalPrice = p.price * quantity;
+  const nameLine = p.name && p.name.trim() !== "" && p.name.trim() !== p.code.trim()
+    ? `\n✨ *Product:* ${p.name.trim()}`
+    : "";
 
   const message = 
 `👑 *SUVINA JEWELS - ORDER ENQUIRY* 👑
 --------------------------------------------------
 Hello! I would like to order this jewelry set:
 
-✨ *Product:* ${p.name}
-🔖 *Item Code:* ${p.code}
+🔖 *Item Code:* ${p.code}${nameLine}
 💰 *Price:* ₹${p.price.toLocaleString("en-IN")} each
 🔢 *Quantity:* ${quantity}
 💵 *Total Amount:* ₹${totalPrice.toLocaleString("en-IN")}
@@ -865,10 +981,12 @@ function checkoutCartViaWhatsApp() {
   const totals = calculateCartTotals();
   const orderDate = new Date().toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
   
-  // Format items list
-  const itemsText = AppState.cart.map((item, index) => 
-    `${index + 1}. *${item.name}* (Code: ${item.code})\n   Qty: ${item.quantity} × ₹${item.price.toLocaleString("en-IN")} = *₹${(item.price * item.quantity).toLocaleString("en-IN")}*`
-  ).join("\n\n");
+  // Format items list cleanly by Product Code & Price
+  const itemsText = AppState.cart.map((item, index) => {
+    const hasName = item.name && item.name !== item.code;
+    const label = hasName ? `*${item.code}* - ${item.name}` : `*Item Code: ${item.code}*`;
+    return `${index + 1}. ${label}\n   Qty: ${item.quantity} × ₹${item.price.toLocaleString("en-IN")} = *₹${(item.price * item.quantity).toLocaleString("en-IN")}*`;
+  }).join("\n\n");
 
   const couponText = totals.discount > 0 
     ? `🏷️ *Coupon Applied:* ${AppState.appliedCoupon.code} (-₹${totals.discount.toLocaleString("en-IN")})\n` 
@@ -1006,7 +1124,11 @@ function handleCheckoutSubmit(event) {
   }
 
   const totals = calculateCartTotals();
-  const itemsText = AppState.cart.map(i => `${i.name} (x${i.quantity}) - ₹${i.price * i.quantity}`).join("\n");
+  const itemsText = AppState.cart.map(i => {
+    const hasName = i.name && i.name !== i.code;
+    const label = hasName ? `${i.code} (${i.name})` : `${i.code}`;
+    return `${label} (x${i.quantity}) - ₹${(i.price * i.quantity).toLocaleString("en-IN")}`;
+  }).join("\n");
 
   const confirmationMsg = 
 `🛍️ *CONFIRMED WEBSITE ORDER*
